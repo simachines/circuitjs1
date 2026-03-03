@@ -75,6 +75,22 @@ python3 -m http.server
 
 Then go to the Ports tab, hover over the "Forwarded Address" and click "Follow Link".  Then click `circuitjs.html` to view the application.
 
+### Quick local test
+
+Use the included helper scripts to compile and run the app with the recommended local layout (`war/` + `war/circuitjs1` link):
+
+```bash
+./test.sh        # Linux/macOS, serves on port 8000
+./test.sh 9000   # custom port
+```
+
+```powershell
+.\test.ps1        # Windows PowerShell, serves on port 8000
+.\test.ps1 -Port 9000
+```
+
+Both scripts compile `compileGwt`, link `war/circuitjs1` to `build/gwt/out/circuitjs1`, and serve `war/circuitjs.html` with Python's HTTP server.
+
 ## Deployment of the web application
 
 * "GWT Compile Project..." as explained above or run `./dev.sh compile`. This will put the outputs in to the "war" directory in the Eclipse project folder. You then need to copy everything in the "war" directory, except the "WEB-INF" directory, on to your web server.

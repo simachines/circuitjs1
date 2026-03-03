@@ -261,11 +261,15 @@ public class CustomCompositeElm extends CompositeElm {
 		    className.equals("GraphicElm") ||
 		    (className.equals("GroundElm") && childElem.getAttribute("x") != null)) {
 		ce = CirSim.constructElement(className, 0, 0);
+		if (ce == null)
+		    continue;
 		xml.parseChildElement(childElem);
 		ce.undumpXml(xml);
 		allElms.add(ce);
 	    } else {
 		ce = compElmList.get(compIdx++);
+		if (ce == null)
+		    continue;
 	    }
 	    ce.setPositionFromXml(childElem);
 	}

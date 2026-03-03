@@ -151,6 +151,10 @@ class XMLDeserializer {
 		continue;
 	    }
 	    CircuitElm elm = app.constructElement(className, 0, 0);
+	    if (elm == null) {
+		app.console("failed to construct xml element: " + className + " (" + tagName + ")");
+		continue;
+	    }
 	    currentXmlElement = elem;
 	    currentElm = elm;
 	    elm.undumpXml(this);

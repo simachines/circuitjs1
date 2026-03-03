@@ -117,9 +117,12 @@ public class CircuitLoader {
             clearCircuit();
         }
         boolean subs = (flags & RC_SUBCIRCUITS) != 0;
+        String firstImportError = null;
 
         int p = 0;
+        int lineNumber = 0;
         while (p < len) {
+            lineNumber++;
             int l;
             int linelen = len - p;
             for (l = 0; l != len - p; l++) {
@@ -191,6 +194,8 @@ public class CircuitLoader {
                     CircuitElm newce = app.createCe(tint, x1, y1, x2, y2, f, st);
                     if (newce == null) {
                         app.console("unrecognized dump type: " + type);
+                        if (firstImportError == null)
+                            firstImportError = "Unrecognized element type '" + type + "' at line " + lineNumber;
                         break;
                     }
                     newce.setPoints();
@@ -198,6 +203,8 @@ public class CircuitLoader {
                 } catch (Exception ee) {
                     ee.printStackTrace();
                     app.console("exception while undumping " + ee);
+                    if (firstImportError == null)
+                        firstImportError = "Parse error at line " + lineNumber + ": " + ee;
                     break;
                 }
                 break;
@@ -206,6 +213,8 @@ public class CircuitLoader {
         }
 
 	finishReadCircuit(flags);
+	if (firstImportError != null)
+	    Window.alert("Import warning: " + firstImportError);
     }
 
     public void finishReadCircuit(int flags) {

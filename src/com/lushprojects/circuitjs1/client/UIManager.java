@@ -512,7 +512,10 @@ public class UIManager {
             try {
                 app.sim.preStampAndStampCircuit();
             } catch (Exception e) {
-                app.sim.stop("Exception in stampCircuit()", null);
+		String msg = "Exception in stampCircuit()";
+		if (e != null)
+		    msg += ": " + e;
+		app.sim.stop(msg, null);
 		GWT.log("Exception in stampCircuit", e);
             }
             perfmon.stopContext();
@@ -1154,6 +1157,14 @@ public class UIManager {
 	    app.classToLabelMap = new HashMap<String, String>();
 	app.classToLabelMap.put(t, s);
 
+	if (t.startsWith("CustomCompositeElm:") || "CustomCompositeElm".equals(t)) {
+	    CheckboxMenuItem mi = new CheckboxMenuItem(s);
+	    mi.setScheduledCommand(new MyCommand("main", t));
+	    mainMenuItems.add(mi);
+	    mainMenuItemNames.add(t);
+	    return mi;
+	}
+
     	// try {
     	//   Class c = Class.forName(t);
     	String shortcut="";
@@ -1165,8 +1176,14 @@ public class UIManager {
 	}
     	CheckboxMenuItem mi;
     	app.register(t, elm);
-	if (elm == null)
+		if (elm == null) {
 	    app.console("can't create class: " + t);
+		    mi = new CheckboxMenuItem(s);
+		    mi.setScheduledCommand(new MyCommand("main", t));
+		    mainMenuItems.add(mi);
+		    mainMenuItemNames.add(t);
+		    return mi;
+		}
     	if ( elm!=null ) {
     		if (elm.needsShortcut() ) {
     			shortcut += (char)elm.getShortcut();
@@ -1176,7 +1193,7 @@ public class UIManager {
     		}
     		elm.delete();
     	}
-    	if (shortcut=="")
+		if (shortcut.isEmpty())
     		mi= new CheckboxMenuItem(s);
     	else
     		mi = new CheckboxMenuItem(s, shortcut);

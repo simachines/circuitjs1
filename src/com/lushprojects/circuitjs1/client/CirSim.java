@@ -571,31 +571,34 @@ public class CirSim implements NativePreviewHandler {
 	if (elm != null)
 	    return elm;
     	
-	if (n == "VoltageElm")
+	if ("VoltageElm".equals(n))
 	    return new DCVoltageElm(x1, y1);
-	if (n == "TransistorElm")
+	if ("TransistorElm".equals(n))
 	    return (CircuitElm) new NTransistorElm(x1, y1);
-	if (n == "MosfetElm")
+	if ("MosfetElm".equals(n))
             return (CircuitElm) new NMosfetElm(x1, y1);
-	if (n == "JfetElm")
+	if ("JfetElm".equals(n))
             return (CircuitElm) new NJfetElm(x1, y1);
-    	if (n == "DarlingtonElm")
+	    	if ("DarlingtonElm".equals(n))
             return (CircuitElm) new NDarlingtonElm(x1, y1);
 
 	// if you take out RingCounterElm, it will break subcircuits
     	// if you take out DecadeElm, it will break the menus and people's saved shortcuts
-    	if (n=="DecadeElm" || n=="RingCounterElm")
+	    	if ("DecadeElm".equals(n) || "RingCounterElm".equals(n))
     		return (CircuitElm) new RingCounterElm(x1, y1);
     	
     	// if you take out UserDefinedLogicElm, it will break people's saved shortcuts
-    	if (n=="UserDefinedLogicElm" || n=="CustomLogicElm")
+	    	if ("UserDefinedLogicElm".equals(n) || "CustomLogicElm".equals(n))
     	    	return (CircuitElm) new CustomLogicElm(x1, y1);
     	
     	// handle CustomCompositeElm:modelname
     	if (n.startsWith("CustomCompositeElm:")) {
     	    int ix = n.indexOf(':')+1;
     	    String name = n.substring(ix);
-    	    return (CircuitElm) new CustomCompositeElm(x1, y1, name);
+		CustomCompositeElm compositeElm = new CustomCompositeElm(x1, y1, name);
+		if (compositeElm.model == null)
+		    return null;
+		return (CircuitElm) compositeElm;
     	}
     	return null;
     }

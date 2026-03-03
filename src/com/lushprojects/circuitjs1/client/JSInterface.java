@@ -73,26 +73,38 @@ public class JSInterface {
     }-*/;
 
     native void callUpdateHook() /*-{
-	var hook = $wnd.CircuitJS1.onupdate;
+	var cjs = $wnd.CircuitJS1;
+	if (!cjs)
+	    return;
+	var hook = cjs.onupdate;
 	if (hook)
-	    hook($wnd.CircuitJS1);
+	    hook(cjs);
     }-*/;
 
     native void callAnalyzeHook() /*-{
-	var hook = $wnd.CircuitJS1.onanalyze;
+	var cjs = $wnd.CircuitJS1;
+	if (!cjs)
+	    return;
+	var hook = cjs.onanalyze;
 	if (hook)
-	    hook($wnd.CircuitJS1);
+	    hook(cjs);
     }-*/;
 
     native void callTimeStepHook() /*-{
-	var hook = $wnd.CircuitJS1.ontimestep;
+	var cjs = $wnd.CircuitJS1;
+	if (!cjs)
+	    return;
+	var hook = cjs.ontimestep;
 	if (hook)
-	    hook($wnd.CircuitJS1);
+	    hook(cjs);
     }-*/;
 
     native void callSVGRenderedHook(String svgData) /*-{
-	var hook = $wnd.CircuitJS1.onsvgrendered;
+	var cjs = $wnd.CircuitJS1;
+	if (!cjs)
+	    return;
+	var hook = cjs.onsvgrendered;
 	if (hook)
-	    hook($wnd.CircuitJS1, svgData);
+	    hook(cjs, svgData);
     }-*/;
 }

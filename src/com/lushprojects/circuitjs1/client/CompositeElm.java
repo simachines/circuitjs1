@@ -84,13 +84,22 @@ public abstract class CompositeElm extends CircuitElm {
 	    String nodeStr = line.substring(sp + 1);
 	    CircuitElm newce = CirSim.constructElement(ceType, 0, 0);
 	    if (stIn!=null) {
-		int tint = newce.getDumpType();
+		if (newce == null) {
+		    sim.console("failed to create " + ceType + " in CompositeElm");
+		    continue;
+		}
+		CircuitElm baseElm = newce;
 		String dumpedCe= stIn.nextToken();
 		if (useEscape())
 		    dumpedCe = CustomLogicModel.unescape(dumpedCe);
 		StringTokenizer stCe = new StringTokenizer(dumpedCe, useEscape() ? " " : "_");
 		int flags = new Integer(stCe.nextToken()).intValue();
-		newce = CirSim.createCe(tint, 0, 0, 0, 0, flags, stCe);
+		newce = CirSim.factory.create(ceType, 0, 0, 0, 0, flags, stCe);
+		if (newce == null) {
+		    int tint = baseElm.getDumpType();
+		    if (tint != 0)
+			newce = CirSim.createCe(tint, 0, 0, 0, 0, flags, stCe);
+		}
 	    }
 	    if (newce == null) {
 		sim.console("failed to create " + ceType + " in CompositeElm");
@@ -133,6 +142,10 @@ public abstract class CompositeElm extends CircuitElm {
 		continue;
 	    }
 	    CircuitElm newce = CirSim.constructElement(className, 0, 0);
+	    if (newce == null) {
+		sim.console("failed to create " + className + " in loadCompositeXml");
+		continue;
+	    }
 	    if (newce instanceof GroundElm)
 		((GroundElm) newce).setOldStyle();
 	    xml.parseChildElement(childElem);

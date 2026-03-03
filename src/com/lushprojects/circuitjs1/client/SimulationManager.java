@@ -409,6 +409,8 @@ public class SimulationManager {
     // recursively add child elements to elmList and make node links
     void addChildElms(Vector<CircuitElm> list) {
 	for (CircuitElm ce: list) {
+	    if (ce == null)
+		continue;
 	    Vector<CircuitElm> childList = ce.getChildElmList();
 	    if (childList != null) {
 		// this child is itself a composite; add its children instead
@@ -698,6 +700,12 @@ public class SimulationManager {
     // this gets called after something changes in the circuit, and also when auto-adjusting timestep
     void stampCircuit() {
 	int i;
+	for (i = elmList.size()-1; i >= 0; i--) {
+	    if (elmList.get(i) == null) {
+		CirSim.console("removing null element from elmList at index " + i);
+		elmList.remove(i);
+	    }
+	}
 	int matrixSize = nodeList.size()-1 + voltageSourceCount;
 	circuitMatrix = new double[matrixSize][matrixSize];
 	circuitRightSide = new double[matrixSize];

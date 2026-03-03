@@ -487,32 +487,43 @@ public class Menus {
     boolean isElectron() { return CirSim.isElectron(); }
 
     void getSetupList(final boolean openDefault) {
+	requestSetupList(GWT.getModuleBaseURL()+"setuplist.txt", openDefault, false);
+    }
 
-    	String url;
-    	url = GWT.getModuleBaseURL()+"setuplist.txt"; // +"?v="+random.nextInt();
+    void requestSetupList(final String url, final boolean openDefault, final boolean fallbackAttempted) {
 	RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, url);
 	try {
 	    requestBuilder.sendRequest(null, new RequestCallback() {
 		public void onError(Request request, Throwable exception) {
+		    if (!fallbackAttempted) {
+			requestSetupList("circuitjs1/setuplist.txt", openDefault, true);
+			return;
+		    }
 		    if (!hideMenu)
 			Window.alert(Locale.LS("Can't load circuit list!"));
 		    GWT.log("File Error Response", exception);
 		}
 
 		public void onResponseReceived(Request request, Response response) {
-		    // processing goes here
 		    if (response.getStatusCode()==Response.SC_OK) {
-		    String text = response.getText();
-		    processSetupList(text.getBytes(), openDefault);
-		    // end or processing
-		    }
-		    else { 
-			Window.alert(Locale.LS("Can't load circuit list!"));
-			GWT.log("Bad file server response:"+response.getStatusText() );
+			String text = response.getText();
+			processSetupList(text.getBytes(), openDefault);
+		    } else {
+			if (!fallbackAttempted) {
+			    requestSetupList("circuitjs1/setuplist.txt", openDefault, true);
+			    return;
+			}
+			if (!hideMenu)
+			    Window.alert(Locale.LS("Can't load circuit list!"));
+			GWT.log("Bad file server response:"+response.getStatusText());
 		    }
 		}
 	    });
 	} catch (RequestException e) {
+	    if (!fallbackAttempted) {
+		requestSetupList("circuitjs1/setuplist.txt", openDefault, true);
+		return;
+	    }
 	    GWT.log("failed file reading", e);
 	}
     }

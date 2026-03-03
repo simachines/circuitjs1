@@ -40,7 +40,13 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
     static int sequenceNumber;
     static final int FLAG_SHOW_LABEL = 1;
 
+    static void ensureModelMapsInitialized() {
+	if (globalModelMap == null || localModelMap == null)
+	    initModelMap();
+	}
+
     void setName(String n) {
+	ensureModelMapsInitialized();
 	if (localModelMap.remove(name) != null) {
 	    name = n;
 	    localModelMap.put(name, this);
@@ -117,6 +123,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
 
     // create model from old-style nodeList/elmDump format, converting to XML immediately
     static CustomCompositeModel createModelFromOldFormat(String name, String elmDump, String nodeList, Vector<ExtListEntry> extList) {
+	ensureModelMapsInitialized();
 	CustomCompositeModel lm = new CustomCompositeModel();
 	lm.name = name;
 	lm.extList = extList;
@@ -128,6 +135,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
 
     // create model with XML element doc already built
     static CustomCompositeModel createModel(String name, Document elmDoc, Vector<ExtListEntry> extList) {
+	ensureModelMapsInitialized();
 	CustomCompositeModel lm = new CustomCompositeModel();
 	lm.name = name;
 	lm.elmDoc = elmDoc;
@@ -138,8 +146,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
     }
 
     static void clearDumpedFlags() {
-	if (globalModelMap == null)
-	    return;
+	ensureModelMapsInitialized();
 	Iterator it = globalModelMap.entrySet().iterator();
 	while (it.hasNext()) {
 	    Map.Entry<String,CustomCompositeModel> pair = (Map.Entry)it.next();
@@ -153,6 +160,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
     }
 
     static Vector<CustomCompositeModel> getModelList() {
+		ensureModelMapsInitialized();
         HashMap<String,CustomCompositeModel> merged = new HashMap<String,CustomCompositeModel>(globalModelMap);
         merged.putAll(localModelMap); // local entries win on name collision
         Vector<CustomCompositeModel> vector = new Vector<CustomCompositeModel>();
@@ -266,6 +274,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
     }
 
     void setSaved(boolean sv) {
+		ensureModelMapsInitialized();
         Storage stor = Storage.getLocalStorageIfSupported();
         if (stor == null)
             return;
@@ -281,6 +290,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
     }
 
     static void loadModelFromStorage(String data) {
+	ensureModelMapsInitialized();
 	Document doc = XMLParser.parse(data);
 	Element root = doc.getDocumentElement();
 	XMLDeserializer xml = new XMLDeserializer(CirSim.theApp);
@@ -451,6 +461,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
     }
 
     void remove() {
+	ensureModelMapsInitialized();
 	setSaved(false);
 	localModelMap.remove(name);
 	globalModelMap.remove(name);
@@ -458,6 +469,7 @@ public class CustomCompositeModel implements Comparable<CustomCompositeModel> {
     }
 
     static void clearLocalModels() {
+	ensureModelMapsInitialized();
 	CirSim.console("clearLocalModels: clearing " + localModelMap.size() + " local models");
 	localModelMap.clear();
 	sequenceNumber++;

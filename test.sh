@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PORT=${1:-8000}
+DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if [ -x "$DIR/gradlew" ]; then
+    GRADLE="$DIR/gradlew"
+elif [ -x /tmp/gradle-8.7/bin/gradle ]; then
+    GRADLE=/tmp/gradle-8.7/bin/gradle
+elif command -v gradle >/dev/null 2>&1; then
+    GRADLE=gradle
+else
+    echo "Gradle not found. Install it or download 8.7:"
+    echo "  curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/g.zip && unzip -qo /tmp/g.zip -d /tmp"
+    exit 1
+fi
+
+echo "=== Using: $GRADLE ==="
+echo "=== Compiling GWT ==="
+cd "$DIR"
+"$GRADLE" compileGwt --console verbose
+
+echo "=== Linking war/circuitjs1 -> build/gwt/out/circuitjs1 ==="
+mkdir -p "$DIR/war"
+ln -sfn "$DIR/build/gwt/out/circuitjs1" "$DIR/war/circuitjs1"
+
+echo "=== Starting server on http://localhost:$PORT/circuitjs.html ==="
+cd "$DIR/war"
+open "http://localhost:$PORT/circuitjs.html" 2>/dev/null \
+  || xdg-open "http://localhost:$PORT/circuitjs.html" 2>/dev/null \
+  || echo "Open http://localhost:$PORT/circuitjs.html in your browser"
+python3 -m http.server "$PORT"

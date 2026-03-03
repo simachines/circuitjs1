@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-  <link rel="manifest" href="/circuit/manifest.json">
+  <link rel="manifest" href="manifest.json">
   
     <!-- Properties can be specified to influence deferred binding -->
     <meta name='gwt:property' content='locale=en_UK'>
@@ -155,6 +155,55 @@
   <!-- Include the next line to allow support for dropbox import/export. You will need your own app key. -->
   <!--<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="YOUR_KEY"></script>-->
 
+  <div id="startupDiag" style="display:none; position:fixed; left:8px; right:8px; top:8px; z-index:2147483647; background:#fff3f3; color:#900; border:1px solid #d88; padding:8px; font-family:monospace; font-size:12px; white-space:pre-wrap;"></div>
+
+  <script>
+  (function () {
+    var hasStarted = false;
+    var diagEl = null;
+    function getDiagEl() {
+      if (!diagEl) {
+        diagEl = document.getElementById('startupDiag');
+      }
+      return diagEl;
+    }
+    function showDiag(message) {
+      var el = getDiagEl();
+      if (!el) {
+        return;
+      }
+      el.style.display = 'block';
+      el.textContent = 'Startup diagnostics:\n' + message;
+    }
+
+    window.addEventListener('error', function (event) {
+      var msg = '' + (event.message || 'Unknown error');
+      var src = event.filename ? ('\nfile: ' + event.filename + ':' + event.lineno + ':' + event.colno) : '';
+      var stack = event.error && event.error.stack ? ('\nstack:\n' + event.error.stack) : '';
+      showDiag(msg + src + stack);
+      if (stack) {
+	console.error(stack);
+      }
+    });
+
+    window.addEventListener('unhandledrejection', function (event) {
+      var reason = event.reason;
+      var msg = reason && (reason.stack || reason.message) ? (reason.stack || reason.message) : String(reason);
+      showDiag('Unhandled promise rejection\n' + msg);
+    });
+
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        var canvas = document.querySelector('canvas');
+        hasStarted = !!canvas;
+        if (!hasStarted) {
+          showDiag('No canvas detected 6 seconds after load. The bootstrap likely failed before UI initialization.');
+        }
+      }, 6000);
+    });
+  })();
+  </script>
+
   <script language="javascript" src="lz-string.min.js"></script>
    
     <!-- This script tag is what actually loads the GWT module.  The -->
@@ -169,13 +218,31 @@
     
     <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-	navigator.serviceWorker.register('service-worker.js').then(registration => {
-	  console.log('Service Worker registered with scope:', registration.scope);
-	}).catch(error => {
-	  console.error('Service Worker registration failed:', error);
-	});
+      const localhostHosts = ['localhost', '127.0.0.1', '::1'];
+      const isLocalhost = localhostHosts.indexOf(window.location.hostname) !== -1;
+
+      if (isLocalhost) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => registration.unregister());
+  });
+  if ('caches' in window) {
+    caches.keys().then(cacheKeys => {
+      cacheKeys.forEach(cacheKey => {
+        if (cacheKey.indexOf('circuitjs1-app-cache-') === 0) {
+    caches.delete(cacheKey);
+        }
       });
+    });
+  }
+      } else {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').then(registration => {
+      console.log('Service Worker registered with scope:', registration.scope);
+    }).catch(error => {
+      console.error('Service Worker registration failed:', error);
+    });
+  });
+      }
     }
     </script>
 
