@@ -264,10 +264,11 @@ class Scope {
     Scope(CirSim app_, SimulationManager sim_) {
     	sim = sim_;
     	app = app_;
+    	position = -1;
     	scale = new double[UNITS_COUNT];
     	reduceRange = new boolean[UNITS_COUNT];
 	manDivisions = lastManDivisions;
-    	
+
     	rect = new Rectangle(0, 0, 1, 1);
    	imageCanvas=Canvas.createIfSupported();
    	imageContext=imageCanvas.getContext2d();
@@ -1844,7 +1845,7 @@ class Scope {
     	CircuitElm elm = getSingleElm();
     	return elm != null && elm.canShowValueInScope(VAL_R);
     }
-    
+
     boolean isShowingVceAndIc() {
 	return plot2d && plots.size() == 2 && plots.get(0).value == VAL_VCE && plots.get(1).value == VAL_IC;
     }
@@ -1873,45 +1874,6 @@ class Scope {
 	if (isManualScale())
 	    flags |= FLAG_DIVISIONS;
 	return flags;
-    }
-    
-
-    
-    String dump() {
-	ScopePlot vPlot = plots.get(0);
-	
-	CircuitElm elm = vPlot.elm;
-    	if (elm == null)
-    		return null;
-    	int flags = getFlags();
-    	int eno = app.locateElm(elm);
-    	if (eno < 0)
-    		return null;
-    	String x = "o " + eno + " " +
-    			vPlot.scopePlotSpeed + " " + vPlot.value + " " 
-    			+ exportAsDecOrHex(flags, FLAG_PERPLOTFLAGS) + " " +
-    			scale[UNITS_V] + " " + scale[UNITS_A] + " " + position + " " +
-    			plots.size();
-	if ((flags & FLAG_DIVISIONS) != 0)
-	    x += " " + manDivisions;
-    	int i;
-    	for (i = 0; i < plots.size(); i++) {
-    	    ScopePlot p = plots.get(i);
-    	    if ((flags & FLAG_PERPLOTFLAGS) !=0)
-    		x += " " + Integer.toHexString(p.getPlotFlags()); // NB always export in Hex (no prefix)
-    	    if (i > 0)
-    		x += " " + app.locateElm(p.elm) + " " + p.value;
-    	    // dump scale if units are not V or A
-    	    if (p.units > UNITS_A)
-    		x += " " + scale[p.units];
-    	    if (isManualScale()) {// In this version we always dump manual settings using the PERPLOT format
-    	        x += " " + p.manScale + " "  
-    		+ p.manVPosition;
-    	    }
-    	}
-    	if (text != null)
-    	    	x += " " + CustomLogicModel.escape(text);
-    	return x;
     }
     
     void dumpXml(Document doc, Element root) {

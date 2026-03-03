@@ -4,6 +4,7 @@ set -euo pipefail
 PORT=${1:-8000}
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Find Gradle — prefer wrapper, then local install, then /tmp
 if [ -x "$DIR/gradlew" ]; then
     GRADLE="$DIR/gradlew"
 elif [ -x /tmp/gradle-8.7/bin/gradle ]; then
@@ -24,7 +25,6 @@ cd "$DIR"
 echo "=== Linking war/circuitjs1 -> build/gwt/out/circuitjs1 ==="
 mkdir -p "$DIR/war"
 ln -sfn "$DIR/build/gwt/out/circuitjs1" "$DIR/war/circuitjs1"
-
 echo "=== Starting server on http://localhost:$PORT/circuitjs.html ==="
 cd "$DIR/war"
 open "http://localhost:$PORT/circuitjs.html" 2>/dev/null \

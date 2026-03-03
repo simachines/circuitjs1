@@ -91,6 +91,13 @@ Use the included helper scripts to compile and run the app with the recommended 
 
 Both scripts compile `compileGwt`, link `war/circuitjs1` to `build/gwt/out/circuitjs1`, and serve `war/circuitjs.html` with Python's HTTP server.
 
+`test.sh` finds Gradle via the wrapper (`./gradlew`), the system PATH, or `/tmp/gradle-8.7/`.
+
+> **Note:** Gradle 8.7 is required (the GWT plugin is incompatible with Gradle 9.x). If needed:
+> ```bash
+> curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/g.zip && unzip -qo /tmp/g.zip -d /tmp
+> ```
+
 ## Deployment of the web application
 
 * "GWT Compile Project..." as explained above or run `./dev.sh compile`. This will put the outputs in to the "war" directory in the Eclipse project folder. You then need to copy everything in the "war" directory, except the "WEB-INF" directory, on to your web server.

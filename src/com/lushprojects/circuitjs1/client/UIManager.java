@@ -70,6 +70,7 @@ public class UIManager {
     String lastCursorStyle;
 
     Toolbar toolbar;
+    SubcircuitBar subcircuitBar;
 
     DockLayoutPanel layoutPanel;
     VerticalPanel verticalPanel;
@@ -273,6 +274,9 @@ public class UIManager {
 	cvcontext=cv.getContext2d();
 	app.scopeManager = scopeManager = new ScopeManager(app);
 
+	subcircuitBar = new SubcircuitBar();
+	RootPanel.get().add(subcircuitBar);
+
 	setToolbar(); // calls setCanvasSize()
 	layoutPanel.add(cv);
 	verticalPanel.add(buttonPanel);
@@ -395,6 +399,13 @@ public class UIManager {
 
     	setCircuitArea();
 
+	if (subcircuitBar != null) {
+	    int barTop = (hideMenu ? 0 : MENUBARHEIGHT);
+	    if (menus.toolbarCheckItem.getState())
+		barTop += TOOLBARHEIGHT;
+	    subcircuitBar.updatePosition(0, barTop, width);
+	}
+
 	if (app.transform[0] == 0)
 	    centreCircuit();
     }
@@ -447,6 +458,17 @@ public class UIManager {
     		}
     		miny = min(ce.y, min(ce.y2, miny));
     		maxy = max(ce.y, max(ce.y2, maxy));
+    		// use boundingBox for elements like chips/subcircuits whose
+    		// visual extent exceeds their x/y coordinates
+    		Rectangle bb = ce.getBoundingBox();
+    		if (bb != null) {
+    		    if (!ce.isCenteredText()) {
+    			minx = min(bb.x, minx);
+    			maxx = max(bb.x + bb.width, maxx);
+    		    }
+    		    miny = min(bb.y, miny);
+    		    maxy = max(bb.y + bb.height, maxy);
+    		}
     	}
     	if (minx > maxx)
     	    return null;
@@ -588,7 +610,7 @@ public class UIManager {
 
         g.context.setLineCap(LineCap.ROUND);
 
-        if (isReadOnly())
+        if (menus.noEditCheckItem.getState())
             g.drawLock(20, 30);
 
         g.setColor(Color.white);
@@ -845,19 +867,19 @@ public class UIManager {
 
     void updateSubcircuitPath() {
 	if (subcircuitStack.isEmpty()) {
-	    toolbar.setSubcircuitPath(null);
+	    subcircuitBar.setSubcircuitPath(null);
 	} else {
-	    StringBuilder sb = new StringBuilder();
+	    StringBuilder sb = new StringBuilder(Locale.LS("Viewing: "));
 	    for (int i = 0; i < subcircuitStack.size(); i++) {
 		if (i > 0) sb.append(" > ");
 		sb.append(subcircuitStack.get(i).modelName);
 	    }
-	    toolbar.setSubcircuitPath(sb.toString());
+	    subcircuitBar.setSubcircuitPath(sb.toString());
 	}
     }
 
     void updateContextButtons() {
-	toolbar.setContextInfo(app.getEditingModelName());
+	subcircuitBar.setContextInfo(app.getEditingModelName());
     }
 
     void setMouseMode(int mode) {
@@ -1240,11 +1262,17 @@ public class UIManager {
 	    CircuitElm.positiveColor = new Color(URL.decodeQueryString(positiveColor));
 	else if (getOptionFromStorage("alternativeColor", false))
 	    CircuitElm.positiveColor = Color.blue;
+	else
+	    CircuitElm.positiveColor = Color.green;
 
 	if (negativeColor != null)
 	    CircuitElm.negativeColor = new Color(URL.decodeQueryString(negativeColor));
+	else
+	    CircuitElm.negativeColor = Color.red;
 	if (neutralColor != null)
 	    CircuitElm.neutralColor = new Color(URL.decodeQueryString(neutralColor));
+	else
+	    CircuitElm.neutralColor = Color.gray;
 
 	if (selectColor != null)
 	    CircuitElm.selectColor = new Color(URL.decodeQueryString(selectColor));
