@@ -73,3 +73,5 @@ Temporary Items
 *.tgz
 
 /.apt_generated/
+temp_decode.js
+temp_find.js
