@@ -13,6 +13,7 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.Window.ClosingEvent;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
@@ -928,6 +929,10 @@ public class UIManager {
 
     // ---- Keyboard ----
 
+    private native boolean isRepeatEvent(NativeEvent evt) /*-{
+	return !!evt.repeat;
+    }-*/;
+
     public void onPreviewNativeEvent(NativePreviewEvent e) {
     	int cc=e.getNativeEvent().getCharCode();
     	int t=e.getTypeInt();
@@ -1001,6 +1006,27 @@ public class UIManager {
     	if (isReadOnly())
     	    return;
 
+    	// handle key-up for momentary switches with keyboard shortcuts
+    	if ((t & Event.ONKEYUP) != 0) {
+    	    String keyStr = String.valueOf((char)code).toLowerCase();
+    	    boolean released = false;
+    	    for (int i = 0; i != elmList.size(); i++) {
+    		CircuitElm ce = elmList.get(i);
+    		if (ce instanceof SwitchElm) {
+    		    SwitchElm se = (SwitchElm) ce;
+    		    if (se.momentary && se.keyShortcut != null && se.keyShortcut.equals(keyStr)) {
+    			se.mouseUp();
+    			released = true;
+    		    }
+    		}
+    	    }
+    	    if (released) {
+    		mouse.heldSwitchElm = null;
+    		app.needAnalyze();
+    		app.repaint();
+    	    }
+    	}
+
     	if ((t & Event.ONKEYDOWN)!=0) {
     		if (code==KEY_BACKSPACE || code==KEY_DELETE) {
     		    if (app.scopeManager.scopeSelected != -1) {
@@ -1019,6 +1045,27 @@ public class UIManager {
 			updateToolbar();
     			mouse.tempMouseMode = mouse.mouseMode;
     			e.cancel();
+    		}
+
+    		if (code==KEY_LEFT || code==KEY_RIGHT || code==KEY_UP || code==KEY_DOWN) {
+    		    int dx = 0, dy = 0;
+    		    if (code == KEY_LEFT)  dx = -app.gridSize;
+    		    if (code == KEY_RIGHT) dx = app.gridSize;
+    		    if (code == KEY_UP)    dy = -app.gridSize;
+    		    if (code == KEY_DOWN)  dy = app.gridSize;
+    		    boolean hasSel = false;
+    		    for (int i = 0; i != elmList.size(); i++)
+    			if (elmList.get(i).isSelected()) { hasSel = true; break; }
+    		    if (hasSel) {
+    			app.undoManager.pushUndo();
+    			for (int i = 0; i != elmList.size(); i++) {
+    			    CircuitElm ce = elmList.get(i);
+    			    if (ce.isSelected())
+    				ce.move(dx, dy);
+    			}
+    			app.needAnalyze();
+    			e.cancel();
+    		    }
     		}
 
     		if (e.getNativeEvent().getCtrlKey() || e.getNativeEvent().getMetaKey()) {
@@ -1072,7 +1119,28 @@ public class UIManager {
     		}
     	}
     	if ((t&Event.ONKEYPRESS)!=0) {
-    		if (cc>32 && cc<127){
+    		// check if any switches have a keyboard shortcut matching this key
+    		if (cc>32 && cc<127) {
+    		    String keyStr = String.valueOf((char)cc).toLowerCase();
+    		    boolean toggled = false;
+		    if (!isRepeatEvent(e.getNativeEvent())) {
+			for (int i = 0; i != elmList.size(); i++) {
+			    CircuitElm ce = elmList.get(i);
+			    if (ce instanceof SwitchElm) {
+				SwitchElm se = (SwitchElm) ce;
+				if (se.keyShortcut != null && se.keyShortcut.equals(keyStr)) {
+				    se.toggle();
+				    if (!(se instanceof LogicInputElm))
+					app.needAnalyze();
+				    toggled = true;
+				}
+			    }
+			}
+		    }
+    		    if (toggled) {
+    			e.cancel();
+    			app.repaint();
+    		    } else {
     			String c=app.shortcuts[cc];
     			e.cancel();
     			if (c==null)
@@ -1081,6 +1149,7 @@ public class UIManager {
     			mouseModeStr=c;
 			updateToolbar();
     			mouse.tempMouseMode = mouse.mouseMode;
+    		    }
     		}
     		if (cc==32) {
 		    setMouseMode(MouseManager.MODE_SELECT);
